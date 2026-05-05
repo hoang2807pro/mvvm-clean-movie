@@ -19,57 +19,67 @@ import com.fernandocejas.sample.core.failure.Failure
 import com.fernandocejas.sample.core.failure.Failure.NetworkConnection
 import com.fernandocejas.sample.core.failure.Failure.ServerError
 import com.fernandocejas.sample.core.functional.Either
-import com.fernandocejas.sample.core.functional.Either.Left
-import com.fernandocejas.sample.core.functional.Either.Right
+import com.fernandocejas.sample.core.functional.toLeft
+import com.fernandocejas.sample.core.functional.toRight
 import com.fernandocejas.sample.core.network.NetworkHandler
+import com.fernandocejas.sample.features.movies.data.local.MovieDao
+import com.fernandocejas.sample.features.movies.data.local.MovieDetailsDao
+import com.fernandocejas.sample.features.movies.data.local.MovieDetailsLocalEntity
+import com.fernandocejas.sample.features.movies.data.local.MovieLocalEntity
 import com.fernandocejas.sample.features.movies.interactor.Movie
 import com.fernandocejas.sample.features.movies.interactor.MovieDetails
-import retrofit2.Call
 
 interface MoviesRepository {
-    fun movies(): Either<Failure, List<Movie>>
-    fun movieDetails(movieId: Int): Either<Failure, MovieDetails>
+    suspend fun movies(): Either<Failure, List<Movie>>
+    suspend fun movieDetails(movieId: Int): Either<Failure, MovieDetails>
 
     class Network(
         private val networkHandler: NetworkHandler,
-        private val service: MoviesService
+        private val service: MoviesService,
+        private val movieDao: MovieDao,
+        private val movieDetailsDao: MovieDetailsDao
     ) : MoviesRepository {
 
-        override fun movies(): Either<Failure, List<Movie>> {
-            return when (networkHandler.isNetworkAvailable()) {
-                true -> request(
-                    service.movies(),
-                    { it.map { movieEntity -> movieEntity.toMovie() } },
-                    emptyList()
-                )
-                false -> Left(NetworkConnection)
-            }
-        }
-
-        override fun movieDetails(movieId: Int): Either<Failure, MovieDetails> {
-            return when (networkHandler.isNetworkAvailable()) {
-                true -> request(
-                    service.movieDetails(movieId),
-                    { it.toMovieDetails() },
-                    MovieDetailsEntity.empty
-                )
-                false -> Left(NetworkConnection)
-            }
-        }
-
-        private fun <T, R> request(
-            call: Call<T>,
-            transform: (T) -> R,
-            default: T
-        ): Either<Failure, R> {
-            return try {
-                val response = call.execute()
-                when (response.isSuccessful) {
-                    true -> Right(transform((response.body() ?: default)))
-                    false -> Left(ServerError)
+        /**
+         * Network-first strategy:
+         * - Online  → fetch fresh data, save to cache, return result
+         * - Offline → return cached data if available, else NetworkConnection failure
+         */
+        override suspend fun movies(): Either<Failure, List<Movie>> {
+            return if (networkHandler.isNetworkAvailable()) {
+                try {
+                    val entities = service.movies()
+                    val movies = entities.map { it.toMovie() }
+                    movieDao.insertAll(movies.map { MovieLocalEntity(it.id, it.poster) })
+                    movies.toRight()
+                } catch (e: Exception) {
+                    ServerError.toLeft()
                 }
-            } catch (exception: Throwable) {
-                Left(ServerError)
+            } else {
+                val cached = movieDao.getAll()
+                if (cached.isNotEmpty()) cached.map { it.toMovie() }.toRight()
+                else NetworkConnection.toLeft()
+            }
+        }
+
+        override suspend fun movieDetails(movieId: Int): Either<Failure, MovieDetails> {
+            return if (networkHandler.isNetworkAvailable()) {
+                try {
+                    val entity = service.movieDetails(movieId)
+                    val details = entity.toMovieDetails()
+                    movieDetailsDao.insert(
+                        MovieDetailsLocalEntity(
+                            details.id, details.title, details.poster, details.summary,
+                            details.cast, details.director, details.year, details.trailer
+                        )
+                    )
+                    details.toRight()
+                } catch (e: Exception) {
+                    ServerError.toLeft()
+                }
+            } else {
+                val cached = movieDetailsDao.getById(movieId)
+                cached?.toMovieDetails()?.toRight() ?: NetworkConnection.toLeft()
             }
         }
     }

@@ -15,10 +15,11 @@
  */
 package com.fernandocejas.sample.core.platform
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.fernandocejas.sample.core.failure.Failure
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Base ViewModel class with default Failure handling.
@@ -27,8 +28,8 @@ import com.fernandocejas.sample.core.failure.Failure
  */
 abstract class BaseViewModel : ViewModel() {
 
-    private val _failure: MutableLiveData<Failure> = MutableLiveData()
-    val failure: LiveData<Failure> = _failure
+    private val _failure = MutableStateFlow<Failure?>(null)
+    val failure: StateFlow<Failure?> = _failure.asStateFlow()
 
     protected fun handleFailure(failure: Failure) {
         _failure.value = failure

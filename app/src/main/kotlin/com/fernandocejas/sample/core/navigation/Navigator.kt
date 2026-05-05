@@ -59,7 +59,10 @@ class Navigator(private val authenticator: Authenticator) {
         try {
             context.startActivity(createYoutubeIntent(videoUrl))
         } catch (ex: ActivityNotFoundException) {
-            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl)))
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
         }
     }
 

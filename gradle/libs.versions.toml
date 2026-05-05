@@ -35,6 +35,9 @@ espressoCore = "3.6.1"
 junitVersion = "1.2.1"
 rules = "1.6.1"
 
+room = "2.6.1"
+okhttpLogging = "4.12.0"
+
 # tooling -------
 leakcanaryAndroid = "2.14"
 
@@ -96,6 +99,12 @@ androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", vers
 androidx-espresso-intents = { module = "androidx.test.espresso:espresso-intents", version.ref = "espressoCore" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion" }
 androidx-rules = { module = "androidx.test:rules", version.ref = "rules" }
+
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+okhttp-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttpLogging" }
+lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleViewmodelCompose" }
 
 # main module tooling dependencies --------
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanaryAndroid" }

@@ -15,23 +15,36 @@
  */
 package com.fernandocejas.sample.features.movies.ui
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.fernandocejas.sample.core.failure.Failure
 import com.fernandocejas.sample.core.interactor.UseCase.None
 import com.fernandocejas.sample.core.platform.BaseViewModel
 import com.fernandocejas.sample.features.movies.interactor.Movie
 import com.fernandocejas.sample.features.movies.interactor.GetMovies
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+sealed class MoviesUiState {
+    object Loading : MoviesUiState()
+    data class Success(val movies: List<MovieView>) : MoviesUiState()
+    data class Error(val failure: Failure) : MoviesUiState()
+}
 
 class MoviesViewModel(private val getMovies: GetMovies) : BaseViewModel() {
 
-    private val _movies: MutableLiveData<List<MovieView>> = MutableLiveData()
-    val movies: LiveData<List<MovieView>> = _movies
+    private val _uiState = MutableStateFlow<MoviesUiState>(MoviesUiState.Loading)
+    val uiState: StateFlow<MoviesUiState> = _uiState.asStateFlow()
 
     fun loadMovies() =
-        getMovies(None(), viewModelScope) { it.fold(::handleFailure, ::handleMovieList) }
+        getMovies(None(), viewModelScope) { it.fold(::handleMoviesFailure, ::handleMovieList) }
 
     private fun handleMovieList(movies: List<Movie>) {
-        _movies.value = movies.map { MovieView(it.id, it.poster) }
+        _uiState.value = MoviesUiState.Success(movies.map { MovieView(it.id, it.poster) })
+    }
+
+    private fun handleMoviesFailure(failure: Failure) {
+        _uiState.value = MoviesUiState.Error(failure)
+        handleFailure(failure)
     }
 }

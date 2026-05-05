@@ -15,7 +15,6 @@
  */
 package com.fernandocejas.sample.features.movies.data
 
-import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Path
 
@@ -27,8 +26,8 @@ internal interface MoviesApi {
     }
 
     @GET(MOVIES)
-    fun movies(): Call<List<MovieEntity>>
+    suspend fun movies(): List<MovieEntity>
 
     @GET(MOVIE_DETAILS)
-    fun movieDetails(@Path(PARAM_MOVIE_ID) movieId: Int): Call<MovieDetailsEntity>
+    suspend fun movieDetails(@Path(PARAM_MOVIE_ID) movieId: Int): MovieDetailsEntity
 }

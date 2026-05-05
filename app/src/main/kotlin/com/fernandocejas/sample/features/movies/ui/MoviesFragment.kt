@@ -20,11 +20,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.StringRes
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.fernandocejas.sample.R
-import com.fernandocejas.sample.core.extension.failure
 import com.fernandocejas.sample.core.extension.invisible
-import com.fernandocejas.sample.core.extension.observe
 import com.fernandocejas.sample.core.extension.visible
 import com.fernandocejas.sample.core.failure.Failure
 import com.fernandocejas.sample.core.failure.Failure.NetworkConnection
@@ -33,13 +34,13 @@ import com.fernandocejas.sample.core.navigation.Navigator
 import com.fernandocejas.sample.core.platform.BaseFragment
 import com.fernandocejas.sample.databinding.FragmentMoviesBinding
 import com.fernandocejas.sample.features.movies.failure.MovieFailure.ListNotAvailable
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 class MoviesFragment : BaseFragment() {
 
     private val navigator: Navigator by inject()
     private val moviesAdapter: MoviesAdapter by inject()
-
     private val moviesViewModel: MoviesViewModel by inject()
 
     private var _binding: FragmentMoviesBinding? = null
@@ -47,11 +48,7 @@ class MoviesFragment : BaseFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        with(moviesViewModel) {
-            observe(movies, ::renderMoviesList)
-            failure(failure, ::handleFailure)
-        }
+        observeViewModel()
     }
 
     override fun onCreateView(
@@ -74,8 +71,23 @@ class MoviesFragment : BaseFragment() {
         _binding = null
     }
 
+    private fun observeViewModel() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                moviesViewModel.uiState.collect { state ->
+                    when (state) {
+                        is MoviesUiState.Loading -> showProgress()
+                        is MoviesUiState.Success -> renderMoviesList(state.movies)
+                        is MoviesUiState.Error -> handleFailure(state.failure)
+                    }
+                }
+            }
+        }
+    }
+
     private fun initializeView() {
-        binding.movieList.layoutManager = StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL)
+        binding.movieList.layoutManager =
+            StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL)
         binding.movieList.adapter = moviesAdapter
         moviesAdapter.clickListener = { movie, navigationExtras ->
             navigator.showMovieDetails(requireActivity(), movie, navigationExtras)
@@ -85,16 +97,15 @@ class MoviesFragment : BaseFragment() {
     private fun loadMoviesList() {
         binding.emptyView.invisible()
         binding.movieList.visible()
-        showProgress()
         moviesViewModel.loadMovies()
     }
 
-    private fun renderMoviesList(movies: List<MovieView>?) {
-        moviesAdapter.collection = movies.orEmpty()
+    private fun renderMoviesList(movies: List<MovieView>) {
+        moviesAdapter.collection = movies
         hideProgress()
     }
 
-    private fun handleFailure(failure: Failure?) {
+    private fun handleFailure(failure: Failure) {
         when (failure) {
             is NetworkConnection -> renderFailure(R.string.failure_network_connection)
             is ServerError -> renderFailure(R.string.failure_server_error)

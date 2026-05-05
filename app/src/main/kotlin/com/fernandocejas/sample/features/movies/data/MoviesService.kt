@@ -20,6 +20,6 @@ import retrofit2.Retrofit
 class MoviesService(retrofit: Retrofit) : MoviesApi {
     private val moviesApi by lazy { retrofit.create(MoviesApi::class.java) }
 
-    override fun movies() = moviesApi.movies()
-    override fun movieDetails(movieId: Int) = moviesApi.movieDetails(movieId)
+    override suspend fun movies() = moviesApi.movies()
+    override suspend fun movieDetails(movieId: Int) = moviesApi.movieDetails(movieId)
 }

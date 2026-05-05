@@ -147,6 +147,17 @@ dependencies {
     androidTestImplementation(libs.androidx.rules)
     androidTestImplementation(libs.androidx.espresso.intents)
 
+    // Room
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
+    // OkHttp Logging
+    implementation(libs.okhttp.logging)
+
+    // Lifecycle runtime for Compose
+    implementation(libs.lifecycle.runtime.compose)
+
     // Development/Tooling dependencies
     debugImplementation(libs.leakcanary.android)
 }

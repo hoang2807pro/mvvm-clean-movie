@@ -15,37 +15,49 @@
  */
 package com.fernandocejas.sample.features.movies.ui
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.fernandocejas.sample.core.failure.Failure
 import com.fernandocejas.sample.core.platform.BaseViewModel
 import com.fernandocejas.sample.features.movies.interactor.MovieDetails
 import com.fernandocejas.sample.features.movies.interactor.PlayMovie
 import com.fernandocejas.sample.features.movies.interactor.GetMovieDetails
 import com.fernandocejas.sample.features.movies.interactor.GetMovieDetails.Params
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+sealed class MovieDetailsUiState {
+    object Loading : MovieDetailsUiState()
+    data class Success(val movie: MovieDetailsView) : MovieDetailsUiState()
+    data class Error(val failure: Failure) : MovieDetailsUiState()
+}
 
 class MovieDetailsViewModel(
     private val getMovieDetails: GetMovieDetails,
     private val playMovie: PlayMovie
 ) : BaseViewModel() {
 
-    private val _movieDetails: MutableLiveData<MovieDetailsView> = MutableLiveData()
-    val movieDetails: LiveData<MovieDetailsView> = _movieDetails
+    private val _uiState = MutableStateFlow<MovieDetailsUiState>(MovieDetailsUiState.Loading)
+    val uiState: StateFlow<MovieDetailsUiState> = _uiState.asStateFlow()
 
     fun loadMovieDetails(movieId: Int) =
         getMovieDetails(Params(movieId), viewModelScope) {
-            it.fold(
-                ::handleFailure,
-                ::handleMovieDetails
-            )
+            it.fold(::handleDetailsFailure, ::handleMovieDetails)
         }
 
     fun playMovie(url: String) = playMovie(PlayMovie.Params(url), viewModelScope)
 
     private fun handleMovieDetails(movie: MovieDetails) {
-        _movieDetails.value = MovieDetailsView(
-            movie.id, movie.title, movie.poster,
-            movie.summary, movie.cast, movie.director, movie.year, movie.trailer
+        _uiState.value = MovieDetailsUiState.Success(
+            MovieDetailsView(
+                movie.id, movie.title, movie.poster,
+                movie.summary, movie.cast, movie.director, movie.year, movie.trailer
+            )
         )
+    }
+
+    private fun handleDetailsFailure(failure: Failure) {
+        _uiState.value = MovieDetailsUiState.Error(failure)
+        handleFailure(failure)
     }
 }
