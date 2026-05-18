@@ -26,21 +26,9 @@
         </intent-filter>
     </activity>
 
-    <activity
-        android:name=".features.login.ui.LoginActivity"
-        android:label="@string/login_screen_title">
-    </activity>
-
-    <activity
-        android:name=".features.movies.ui.MoviesActivity"
-        android:label="@string/movies_screen_title">
-    </activity>
-
-    <activity
-        android:name=".features.movies.ui.MovieDetailsActivity"
-        android:label="@string/movie_details_screen_title"
-        android:theme="@style/AppTheme.Translucent">
-    </activity>
+    <activity android:name=".features.home.ui.HomeActivity" android:label="home" />
+    <activity android:name=".features.start.ui.StartActivity" android:label="start" />
+    <activity android:name=".features.language.ui.LanguageActivity" />
 
 </application>
 

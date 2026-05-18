@@ -15,75 +15,17 @@
  */
 package com.fernandocejas.sample.core.navigation
 
-import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.view.View
-import androidx.fragment.app.FragmentActivity
-import com.fernandocejas.sample.core.extension.emptyString
-import com.fernandocejas.sample.features.auth.credentials.Authenticator
-import com.fernandocejas.sample.features.movies.ui.MovieView
-import com.fernandocejas.sample.features.movies.ui.MoviesActivity
+import com.fernandocejas.sample.features.start.ui.StartActivity
 
 
-class Navigator(private val authenticator: Authenticator) {
+class Navigator() {
 
-//    private fun showLogin(context: Context) =
-//        context.startActivity(LoginActivity.callingIntent(context))
 
-    fun showMain(context: Context) {
-//        TODO()
-        showMovies(context)
-//        when (authenticator.userLoggedIn()) {
-//            true -> showMovies(context)
-//            false -> showLogin(context)
-//        }
+    fun showStart(context: Context) {
+        context.startActivity(StartActivity.callingIntent(context))
     }
 
-    private fun showMovies(context: Context) =
-        context.startActivity(MoviesActivity.callingIntent(context))
-
-    fun showMovieDetails(activity: FragmentActivity, movie: MovieView, navigationExtras: Extras) {
-//        val intent = MovieDetailsActivity.callingIntent(activity, movie)
-//        val sharedView = navigationExtras.transitionSharedElement as ImageView
-//        val activityOptions = ActivityOptionsCompat
-//            .makeSceneTransitionAnimation(activity, sharedView, sharedView.transitionName)
-//        activity.startActivity(intent, activityOptions.toBundle())
-    }
-
-    private val videoUrlHttp = "http://www.youtube.com/watch?v="
-    private val videoUrlHttps = "https://www.youtube.com/watch?v="
-
-    fun openVideo(context: Context, videoUrl: String) {
-        try {
-            context.startActivity(createYoutubeIntent(videoUrl))
-        } catch (ex: ActivityNotFoundException) {
-            context.startActivity(
-                Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl))
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            )
-        }
-    }
-
-    private fun createYoutubeIntent(videoUrl: String): Intent {
-        val videoId = when {
-            videoUrl.startsWith(videoUrlHttp) -> videoUrl.replace(videoUrlHttp, emptyString())
-            videoUrl.startsWith(videoUrlHttps) -> videoUrl.replace(
-                videoUrlHttps,
-                emptyString()
-            )
-            else -> videoUrl
-        }
-
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:$videoId"))
-        intent.putExtra("force_fullscreen", true)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-
-        return intent
-    }
-
-    class Extras(val transitionSharedElement: View)
 }
 
 

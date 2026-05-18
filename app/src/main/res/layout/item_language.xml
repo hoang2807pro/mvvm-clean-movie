@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="72dp"
+    android:layout_marginTop="12dp"
+    android:background="@drawable/bg_language_item"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="16dp">
+
+    <!-- Flag -->
+
+
+    <!-- Language -->
+    <TextView
+        android:id="@+id/txtLanguage"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_weight="1"
+        android:text="English"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp" />
+
+    <!-- Radio -->
+    <RadioButton
+        android:id="@+id/radioSelect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>
